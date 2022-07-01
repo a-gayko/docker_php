@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  php:
+    build:
+      context: ./docker/php
+    volumes:
+      - ./docker/php/xdebug.ini /etc/php/conf.d/xdebug.ini
+      - ./src:/var/www/html/
+
+  nginx:
+    image: nginx
+    ports:
+      - 8081:80
+    volumes:
+      - './docker/nginx:/etc/nginx/conf.d'
+      - './src:/var/www/html'
+    depends_on:
+      - php
+
+  mysql:
+    image: mysql:8
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./db_data:/var/lib/mysql
+
+  postgres:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    volumes:
+      - ./db_data:/var/lib/postgresql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+    ports:
+      - 8082:80
+
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - 8083:8080
+
+volumes:
+  db_data:
